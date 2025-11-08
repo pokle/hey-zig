@@ -89,12 +89,27 @@ pub fn build(b: *std.Build) void {
     // by passing `--prefix` or `-p`.
     b.installArtifact(exe);
 
+    const hello_c = b.addExecutable(.{
+        .name = "hello_c",
+        .root_module = b.createModule(.{
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    hello_c.addCSourceFile(.{
+        .file = b.path("src/hello_c.c"),
+        .flags = &.{},
+    });
+    hello_c.linkLibC();
+    b.installArtifact(hello_c);
+
     // This creates a top level step. Top level steps have a name and can be
     // invoked by name when running `zig build` (e.g. `zig build run`).
     // This will evaluate the `run` step rather than the default step.
     // For a top level step to actually do something, it must depend on other
     // steps (e.g. a Run step, as we will see in a moment).
     const run_step = b.step("run", "Run the app");
+    const run_c_step = b.step("run-c", "Run the C hello app");
 
     // This creates a RunArtifact step in the build graph. A RunArtifact step
     // invokes an executable compiled by Zig. Steps will only be executed by the
@@ -105,6 +120,9 @@ pub fn build(b: *std.Build) void {
     const run_cmd = b.addRunArtifact(exe);
     run_step.dependOn(&run_cmd.step);
 
+    const run_c_cmd = b.addRunArtifact(hello_c);
+    run_c_step.dependOn(&run_c_cmd.step);
+
     // By making the run step depend on the default step, it will be run from the
     // installation directory rather than directly from within the cache directory.
     run_cmd.step.dependOn(b.getInstallStep());
@@ -113,6 +131,7 @@ pub fn build(b: *std.Build) void {
     // command itself, like this: `zig build run -- arg1 arg2 etc`
     if (b.args) |args| {
         run_cmd.addArgs(args);
+        run_c_cmd.addArgs(args);
     }
 
     // Creates an executable that will run `test` blocks from the provided module.

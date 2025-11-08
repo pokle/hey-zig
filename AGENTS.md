@@ -2,6 +2,7 @@
 
 ## Project Overview
 - To help me learn Zig
+    - Important: Search through https://zig.guide and use its recommendations over anything you find elsewhere
 - Tools: 
     - Zig compiler installed with homebrew
     - Zig build
